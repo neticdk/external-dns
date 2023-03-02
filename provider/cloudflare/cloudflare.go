@@ -67,10 +67,10 @@ type cloudFlareDNS interface {
 	ListZones(ctx context.Context, zoneID ...string) ([]cloudflare.Zone, error)
 	ListZonesContext(ctx context.Context, opts ...cloudflare.ReqOption) (cloudflare.ZonesResponse, error)
 	ZoneDetails(ctx context.Context, zoneID string) (cloudflare.Zone, error)
-	ListDNSRecords(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.ListDNSRecordsParams) ([]cloudflare.DNSRecord, *cloudflare.ResultInfo, error)
-	CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (*cloudflare.DNSRecordResponse, error)
-	DeleteDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, recordID string) error
-	UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) error
+	DNSRecords(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) ([]cloudflare.DNSRecord, error)
+	CreateDNSRecord(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) (*cloudflare.DNSRecordResponse, error)
+	DeleteDNSRecord(ctx context.Context, zoneID, recordID string) error
+	UpdateDNSRecord(ctx context.Context, zoneID, recordID string, rr cloudflare.DNSRecord) error
 }
 
 type zoneService struct {
@@ -89,20 +89,20 @@ func (z zoneService) ZoneIDByName(zoneName string) (string, error) {
 	return z.service.ZoneIDByName(zoneName)
 }
 
-func (z zoneService) CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (*cloudflare.DNSRecordResponse, error) {
-	return z.service.CreateDNSRecord(ctx, rc, rp)
+func (z zoneService) CreateDNSRecord(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) (*cloudflare.DNSRecordResponse, error) {
+	return z.service.CreateDNSRecord(ctx, zoneID, rr)
 }
 
-func (z zoneService) ListDNSRecords(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.ListDNSRecordsParams) ([]cloudflare.DNSRecord, *cloudflare.ResultInfo, error) {
-	return z.service.ListDNSRecords(ctx, rc, rp)
+func (z zoneService) DNSRecords(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) ([]cloudflare.DNSRecord, error) {
+	return z.service.DNSRecords(ctx, zoneID, rr)
 }
 
-func (z zoneService) UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) error {
-	return z.service.UpdateDNSRecord(ctx, rc, rp)
+func (z zoneService) UpdateDNSRecord(ctx context.Context, zoneID, recordID string, rr cloudflare.DNSRecord) error {
+	return z.service.UpdateDNSRecord(ctx, zoneID, recordID, rr)
 }
 
-func (z zoneService) DeleteDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, recordID string) error {
-	return z.service.DeleteDNSRecord(ctx, rc, recordID)
+func (z zoneService) DeleteDNSRecord(ctx context.Context, zoneID, recordID string) error {
+	return z.service.DeleteDNSRecord(ctx, zoneID, recordID)
 }
 
 func (z zoneService) ListZonesContext(ctx context.Context, opts ...cloudflare.ReqOption) (cloudflare.ZonesResponse, error) {
@@ -129,22 +129,6 @@ type CloudFlareProvider struct {
 type cloudFlareChange struct {
 	Action         string
 	ResourceRecord cloudflare.DNSRecord
-}
-
-// RecordParamsTypes is a typeset of the possible Record Params that can be passed to cloudflare-go library
-type RecordParamsTypes interface {
-	cloudflare.UpdateDNSRecordParams | cloudflare.CreateDNSRecordParams
-}
-
-// getRecordParam is a generic function that returns the appropriate Record Param based on the cloudFlareChange passed in
-func getRecordParam[T RecordParamsTypes](cfc cloudFlareChange) T {
-	return T{
-		Name:    cfc.ResourceRecord.Name,
-		TTL:     cfc.ResourceRecord.TTL,
-		Proxied: cfc.ResourceRecord.Proxied,
-		Type:    cfc.ResourceRecord.Type,
-		Content: cfc.ResourceRecord.Content,
-	}
 }
 
 // NewCloudFlareProvider initializes a new CloudFlare DNS based Provider.
@@ -229,7 +213,7 @@ func (p *CloudFlareProvider) Records(ctx context.Context) ([]*endpoint.Endpoint,
 
 	endpoints := []*endpoint.Endpoint{}
 	for _, zone := range zones {
-		records, _, err := p.Client.ListDNSRecords(ctx, cloudflare.ZoneIdentifier(zone.ID), cloudflare.ListDNSRecordsParams{})
+		records, err := p.Client.DNSRecords(ctx, zone.ID, cloudflare.DNSRecord{})
 		if err != nil {
 			return nil, err
 		}
@@ -303,7 +287,7 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 	changesByZone := p.changesByZone(zones, changes)
 
 	for zoneID, changes := range changesByZone {
-		records, _, err := p.Client.ListDNSRecords(ctx, cloudflare.ZoneIdentifier(zoneID), cloudflare.ListDNSRecordsParams{})
+		records, err := p.Client.DNSRecords(ctx, zoneID, cloudflare.DNSRecord{})
 		if err != nil {
 			return fmt.Errorf("could not fetch records from zone, %v", err)
 		}
@@ -322,16 +306,13 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 				continue
 			}
 
-			resourceContainer := cloudflare.ZoneIdentifier(zoneID)
 			if change.Action == cloudFlareUpdate {
 				recordID := p.getRecordID(records, change.ResourceRecord)
 				if recordID == "" {
 					log.WithFields(logFields).Errorf("failed to find previous record: %v", change.ResourceRecord)
 					continue
 				}
-				recordParam := getRecordParam[cloudflare.UpdateDNSRecordParams](*change)
-				recordParam.ID = recordID
-				err := p.Client.UpdateDNSRecord(ctx, resourceContainer, recordParam)
+				err := p.Client.UpdateDNSRecord(ctx, zoneID, recordID, change.ResourceRecord)
 				if err != nil {
 					log.WithFields(logFields).Errorf("failed to update record: %v", err)
 				}
@@ -341,13 +322,12 @@ func (p *CloudFlareProvider) submitChanges(ctx context.Context, changes []*cloud
 					log.WithFields(logFields).Errorf("failed to find previous record: %v", change.ResourceRecord)
 					continue
 				}
-				err := p.Client.DeleteDNSRecord(ctx, resourceContainer, recordID)
+				err := p.Client.DeleteDNSRecord(ctx, zoneID, recordID)
 				if err != nil {
 					log.WithFields(logFields).Errorf("failed to delete record: %v", err)
 				}
 			} else if change.Action == cloudFlareCreate {
-				recordParam := getRecordParam[cloudflare.CreateDNSRecordParams](*change)
-				_, err := p.Client.CreateDNSRecord(ctx, resourceContainer, recordParam)
+				_, err := p.Client.CreateDNSRecord(ctx, zoneID, change.ResourceRecord)
 				if err != nil {
 					log.WithFields(logFields).Errorf("failed to create record: %v", err)
 				}

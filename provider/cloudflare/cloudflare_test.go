@@ -105,80 +105,55 @@ func NewMockCloudFlareClientWithRecords(records map[string][]cloudflare.DNSRecor
 	return m
 }
 
-func getDNSRecordFromRecordParams(rp any) cloudflare.DNSRecord {
-	switch params := rp.(type) {
-	case cloudflare.CreateDNSRecordParams:
-		return cloudflare.DNSRecord{
-			Name:    params.Name,
-			TTL:     params.TTL,
-			Proxied: params.Proxied,
-			Type:    params.Type,
-			Content: params.Content,
-		}
-	case cloudflare.UpdateDNSRecordParams:
-		return cloudflare.DNSRecord{
-			Name:    params.Name,
-			TTL:     params.TTL,
-			Proxied: params.Proxied,
-			Type:    params.Type,
-			Content: params.Content,
-		}
-	default:
-		return cloudflare.DNSRecord{}
-	}
-}
-
-func (m *mockCloudFlareClient) CreateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.CreateDNSRecordParams) (*cloudflare.DNSRecordResponse, error) {
-	recordData := getDNSRecordFromRecordParams(rp)
+func (m *mockCloudFlareClient) CreateDNSRecord(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) (*cloudflare.DNSRecordResponse, error) {
 	m.Actions = append(m.Actions, MockAction{
 		Name:       "Create",
-		ZoneId:     rc.Identifier,
-		RecordId:   rp.ID,
-		RecordData: recordData,
+		ZoneId:     zoneID,
+		RecordId:   rr.ID,
+		RecordData: rr,
 	})
-	if zone, ok := m.Records[rc.Identifier]; ok {
-		zone[rp.ID] = recordData
+	if zone, ok := m.Records[zoneID]; ok {
+		zone[rr.ID] = rr
 	}
 	return nil, nil
 }
 
-func (m *mockCloudFlareClient) ListDNSRecords(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.ListDNSRecordsParams) ([]cloudflare.DNSRecord, *cloudflare.ResultInfo, error) {
+func (m *mockCloudFlareClient) DNSRecords(ctx context.Context, zoneID string, rr cloudflare.DNSRecord) ([]cloudflare.DNSRecord, error) {
 	if m.dnsRecordsError != nil {
-		return nil, &cloudflare.ResultInfo{}, m.dnsRecordsError
+		return nil, m.dnsRecordsError
 	}
 	result := []cloudflare.DNSRecord{}
-	if zone, ok := m.Records[rc.Identifier]; ok {
+	if zone, ok := m.Records[zoneID]; ok {
 		for _, record := range zone {
 			result = append(result, record)
 		}
-		return result, &cloudflare.ResultInfo{}, nil
+		return result, nil
 	}
-	return result, &cloudflare.ResultInfo{}, nil
+	return result, nil
 }
 
-func (m *mockCloudFlareClient) UpdateDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, rp cloudflare.UpdateDNSRecordParams) error {
-	recordData := getDNSRecordFromRecordParams(rp)
+func (m *mockCloudFlareClient) UpdateDNSRecord(ctx context.Context, zoneID, recordID string, rr cloudflare.DNSRecord) error {
 	m.Actions = append(m.Actions, MockAction{
 		Name:       "Update",
-		ZoneId:     rc.Identifier,
-		RecordId:   rp.ID,
-		RecordData: recordData,
+		ZoneId:     zoneID,
+		RecordId:   recordID,
+		RecordData: rr,
 	})
-	if zone, ok := m.Records[rc.Identifier]; ok {
-		if _, ok := zone[rp.ID]; ok {
-			zone[rp.ID] = recordData
+	if zone, ok := m.Records[zoneID]; ok {
+		if _, ok := zone[recordID]; ok {
+			zone[recordID] = rr
 		}
 	}
 	return nil
 }
 
-func (m *mockCloudFlareClient) DeleteDNSRecord(ctx context.Context, rc *cloudflare.ResourceContainer, recordID string) error {
+func (m *mockCloudFlareClient) DeleteDNSRecord(ctx context.Context, zoneID, recordID string) error {
 	m.Actions = append(m.Actions, MockAction{
 		Name:     "Delete",
-		ZoneId:   rc.Identifier,
+		ZoneId:   zoneID,
 		RecordId: recordID,
 	})
-	if zone, ok := m.Records[rc.Identifier]; ok {
+	if zone, ok := m.Records[zoneID]; ok {
 		if _, ok := zone[recordID]; ok {
 			delete(zone, recordID)
 			return nil

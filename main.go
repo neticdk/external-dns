@@ -68,6 +68,7 @@ import (
 	"sigs.k8s.io/external-dns/provider/safedns"
 	"sigs.k8s.io/external-dns/provider/scaleway"
 	"sigs.k8s.io/external-dns/provider/tencentcloud"
+	"sigs.k8s.io/external-dns/provider/tidydns"
 	"sigs.k8s.io/external-dns/provider/transip"
 	"sigs.k8s.io/external-dns/provider/ultradns"
 	"sigs.k8s.io/external-dns/provider/vinyldns"
@@ -260,8 +261,7 @@ func main() {
 				View:          cfg.InfobloxView,
 				MaxResults:    cfg.InfobloxMaxResults,
 				DryRun:        cfg.DryRun,
-				FQDNRegEx:     cfg.InfobloxFQDNRegEx,
-				NameRegEx:     cfg.InfobloxNameRegEx,
+				FQDNRexEx:     cfg.InfobloxFQDNRegEx,
 				CreatePTR:     cfg.InfobloxCreatePTR,
 				CacheDuration: cfg.InfobloxCacheDuration,
 			},
@@ -355,6 +355,8 @@ func main() {
 		p, err = plural.NewPluralProvider(cfg.PluralCluster, cfg.PluralProvider)
 	case "tencentcloud":
 		p, err = tencentcloud.NewTencentCloudProvider(domainFilter, zoneIDFilter, cfg.TencentCloudConfigFile, cfg.TencentCloudZoneType, cfg.DryRun)
+	case "tidydns":
+		p, err = tidydns.NewTidyDNSProvider(domainFilter, zoneIDFilter, cfg.TidyDNSEndpoint, cfg.DryRun)
 	default:
 		log.Fatalf("unknown dns provider: %s", cfg.Provider)
 	}

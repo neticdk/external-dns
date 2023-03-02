@@ -688,37 +688,29 @@ func TestAWSApplyChangesDryRun(t *testing.T) {
 }
 
 func TestAWSChangesByZones(t *testing.T) {
-	changes := Route53Changes{
+	changes := []*route53.Change{
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("qux.foo.example.org"), TTL: aws.Int64(1),
-				},
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("qux.foo.example.org"), TTL: aws.Int64(1),
 			},
 		},
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("qux.bar.example.org"), TTL: aws.Int64(2),
-				},
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("qux.bar.example.org"), TTL: aws.Int64(2),
 			},
 		},
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionDelete),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("wambo.foo.example.org"), TTL: aws.Int64(10),
-				},
+			Action: aws.String(route53.ChangeActionDelete),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("wambo.foo.example.org"), TTL: aws.Int64(10),
 			},
 		},
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionDelete),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("wambo.bar.example.org"), TTL: aws.Int64(20),
-				},
+			Action: aws.String(route53.ChangeActionDelete),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("wambo.bar.example.org"), TTL: aws.Int64(20),
 			},
 		},
 	}
@@ -746,59 +738,47 @@ func TestAWSChangesByZones(t *testing.T) {
 	changesByZone := changesByZone(zones, changes)
 	require.Len(t, changesByZone, 3)
 
-	validateAWSChangeRecords(t, changesByZone["foo-example-org"], Route53Changes{
+	validateAWSChangeRecords(t, changesByZone["foo-example-org"], []*route53.Change{
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("qux.foo.example.org"), TTL: aws.Int64(1),
-				},
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("qux.foo.example.org"), TTL: aws.Int64(1),
 			},
 		},
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionDelete),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("wambo.foo.example.org"), TTL: aws.Int64(10),
-				},
+			Action: aws.String(route53.ChangeActionDelete),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("wambo.foo.example.org"), TTL: aws.Int64(10),
 			},
 		},
 	})
 
-	validateAWSChangeRecords(t, changesByZone["bar-example-org"], Route53Changes{
+	validateAWSChangeRecords(t, changesByZone["bar-example-org"], []*route53.Change{
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("qux.bar.example.org"), TTL: aws.Int64(2),
-				},
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("qux.bar.example.org"), TTL: aws.Int64(2),
 			},
 		},
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionDelete),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("wambo.bar.example.org"), TTL: aws.Int64(20),
-				},
+			Action: aws.String(route53.ChangeActionDelete),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("wambo.bar.example.org"), TTL: aws.Int64(20),
 			},
 		},
 	})
 
-	validateAWSChangeRecords(t, changesByZone["bar-example-org-private"], Route53Changes{
+	validateAWSChangeRecords(t, changesByZone["bar-example-org-private"], []*route53.Change{
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("qux.bar.example.org"), TTL: aws.Int64(2),
-				},
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("qux.bar.example.org"), TTL: aws.Int64(2),
 			},
 		},
 		{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionDelete),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String("wambo.bar.example.org"), TTL: aws.Int64(20),
-				},
+			Action: aws.String(route53.ChangeActionDelete),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String("wambo.bar.example.org"), TTL: aws.Int64(20),
 			},
 		},
 	})
@@ -822,7 +802,7 @@ func TestAWSsubmitChanges(t *testing.T) {
 	ctx := context.Background()
 	zones, _ := provider.Zones(ctx)
 	records, _ := provider.Records(ctx)
-	cs := make(Route53Changes, 0, len(endpoints))
+	cs := make([]*route53.Change, 0, len(endpoints))
 	cs = append(cs, provider.newChanges(route53.ChangeActionCreate, endpoints)...)
 
 	require.NoError(t, provider.submitChanges(ctx, cs, zones))
@@ -847,85 +827,22 @@ func TestAWSsubmitChangesError(t *testing.T) {
 	require.Error(t, provider.submitChanges(ctx, cs, zones))
 }
 
-func TestAWSsubmitChangesRetryOnError(t *testing.T) {
-	provider, clientStub := newAWSProvider(t, endpoint.NewDomainFilter([]string{"ext-dns-test-2.teapot.zalan.do."}), provider.NewZoneIDFilter([]string{}), provider.NewZoneTypeFilter(""), defaultEvaluateTargetHealth, false, []*endpoint.Endpoint{})
-
-	ctx := context.Background()
-	zones, err := provider.Zones(ctx)
-	require.NoError(t, err)
-
-	ep1 := endpoint.NewEndpointWithTTL("success.zone-1.ext-dns-test-2.teapot.zalan.do", endpoint.RecordTypeA, endpoint.TTL(recordTTL), "1.0.0.1")
-	ep2 := endpoint.NewEndpointWithTTL("fail.zone-1.ext-dns-test-2.teapot.zalan.do", endpoint.RecordTypeA, endpoint.TTL(recordTTL), "1.0.0.2")
-	ep3 := endpoint.NewEndpointWithTTL("success2.zone-1.ext-dns-test-2.teapot.zalan.do", endpoint.RecordTypeA, endpoint.TTL(recordTTL), "1.0.0.3")
-
-	ep2txt := endpoint.NewEndpointWithTTL("fail__edns_housekeeping.zone-1.ext-dns-test-2.teapot.zalan.do", endpoint.RecordTypeTXT, endpoint.TTL(recordTTL), "something") // "__edns_housekeeping" is the TXT suffix
-	ep2txt.Labels = map[string]string{
-		endpoint.OwnedRecordLabelKey: "fail.zone-1.ext-dns-test-2.teapot.zalan.do",
-	}
-
-	// "success" and "fail" are created in the first step, both are submitted in the same batch; this should fail
-	cs1 := provider.newChanges(route53.ChangeActionCreate, []*endpoint.Endpoint{ep2, ep2txt, ep1})
-	input1 := &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String("/hostedzone/zone-1.ext-dns-test-2.teapot.zalan.do."),
-		ChangeBatch: &route53.ChangeBatch{
-			Changes: cs1.Route53Changes(),
-		},
-	}
-	clientStub.MockMethod("ChangeResourceRecordSets", input1).Return(nil, fmt.Errorf("Mock route53 failure"))
-
-	// because of the failure, changes will be retried one by one; make "fail" submitted in its own batch fail as well
-	cs2 := provider.newChanges(route53.ChangeActionCreate, []*endpoint.Endpoint{ep2, ep2txt})
-	input2 := &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String("/hostedzone/zone-1.ext-dns-test-2.teapot.zalan.do."),
-		ChangeBatch: &route53.ChangeBatch{
-			Changes: cs2.Route53Changes(),
-		},
-	}
-	clientStub.MockMethod("ChangeResourceRecordSets", input2).Return(nil, fmt.Errorf("Mock route53 failure"))
-
-	// "success" should have been created, verify that we still get an error because "fail" failed
-	require.Error(t, provider.submitChanges(ctx, cs1, zones))
-
-	// assert that "success" was successfully created and "fail" and its TXT record were not
-	records, err := provider.Records(ctx)
-	require.NoError(t, err)
-	require.True(t, containsRecordWithDNSName(records, "success.zone-1.ext-dns-test-2.teapot.zalan.do"))
-	require.False(t, containsRecordWithDNSName(records, "fail.zone-1.ext-dns-test-2.teapot.zalan.do"))
-	require.False(t, containsRecordWithDNSName(records, "fail__edns_housekeeping.zone-1.ext-dns-test-2.teapot.zalan.do"))
-
-	// next batch should contain "fail" and "success2", should succeed this time
-	cs3 := provider.newChanges(route53.ChangeActionCreate, []*endpoint.Endpoint{ep2, ep2txt, ep3})
-	require.NoError(t, provider.submitChanges(ctx, cs3, zones))
-
-	// verify all records are there
-	records, err = provider.Records(ctx)
-	require.NoError(t, err)
-	require.True(t, containsRecordWithDNSName(records, "success.zone-1.ext-dns-test-2.teapot.zalan.do"))
-	require.True(t, containsRecordWithDNSName(records, "fail.zone-1.ext-dns-test-2.teapot.zalan.do"))
-	require.True(t, containsRecordWithDNSName(records, "success2.zone-1.ext-dns-test-2.teapot.zalan.do"))
-	require.True(t, containsRecordWithDNSName(records, "fail__edns_housekeeping.zone-1.ext-dns-test-2.teapot.zalan.do"))
-}
-
 func TestAWSBatchChangeSet(t *testing.T) {
-	var cs Route53Changes
+	var cs []*route53.Change
 
 	for i := 1; i <= defaultBatchChangeSize; i += 2 {
-		cs = append(cs, &Route53Change{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String(fmt.Sprintf("host-%d", i)),
-					Type: aws.String("A"),
-				},
+		cs = append(cs, &route53.Change{
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String(fmt.Sprintf("host-%d", i)),
+				Type: aws.String("A"),
 			},
 		})
-		cs = append(cs, &Route53Change{
-			Change: route53.Change{
-				Action: aws.String(route53.ChangeActionCreate),
-				ResourceRecordSet: &route53.ResourceRecordSet{
-					Name: aws.String(fmt.Sprintf("host-%d", i)),
-					Type: aws.String("TXT"),
-				},
+		cs = append(cs, &route53.Change{
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String(fmt.Sprintf("host-%d", i)),
+				Type: aws.String("TXT"),
 			},
 		})
 	}
@@ -939,33 +856,27 @@ func TestAWSBatchChangeSet(t *testing.T) {
 }
 
 func TestAWSBatchChangeSetExceeding(t *testing.T) {
-	var cs Route53Changes
+	var cs []*route53.Change
 	const testCount = 50
 	const testLimit = 11
 	const expectedBatchCount = 5
 	const expectedChangesCount = 10
 
 	for i := 1; i <= testCount; i += 2 {
-		cs = append(cs,
-			&Route53Change{
-				Change: route53.Change{
-					Action: aws.String(route53.ChangeActionCreate),
-					ResourceRecordSet: &route53.ResourceRecordSet{
-						Name: aws.String(fmt.Sprintf("host-%d", i)),
-						Type: aws.String("A"),
-					},
-				},
+		cs = append(cs, &route53.Change{
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String(fmt.Sprintf("host-%d", i)),
+				Type: aws.String("A"),
 			},
-			&Route53Change{
-				Change: route53.Change{
-					Action: aws.String(route53.ChangeActionCreate),
-					ResourceRecordSet: &route53.ResourceRecordSet{
-						Name: aws.String(fmt.Sprintf("host-%d", i)),
-						Type: aws.String("TXT"),
-					},
-				},
+		})
+		cs = append(cs, &route53.Change{
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String(fmt.Sprintf("host-%d", i)),
+				Type: aws.String("TXT"),
 			},
-		)
+		})
 	}
 
 	batchCs := batchChangeSet(cs, testLimit)
@@ -979,31 +890,25 @@ func TestAWSBatchChangeSetExceeding(t *testing.T) {
 }
 
 func TestAWSBatchChangeSetExceedingNameChange(t *testing.T) {
-	var cs Route53Changes
+	var cs []*route53.Change
 	const testCount = 10
 	const testLimit = 1
 
 	for i := 1; i <= testCount; i += 2 {
-		cs = append(cs,
-			&Route53Change{
-				Change: route53.Change{
-					Action: aws.String(route53.ChangeActionCreate),
-					ResourceRecordSet: &route53.ResourceRecordSet{
-						Name: aws.String(fmt.Sprintf("host-%d", i)),
-						Type: aws.String("A"),
-					},
-				},
+		cs = append(cs, &route53.Change{
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String(fmt.Sprintf("host-%d", i)),
+				Type: aws.String("A"),
 			},
-			&Route53Change{
-				Change: route53.Change{
-					Action: aws.String(route53.ChangeActionCreate),
-					ResourceRecordSet: &route53.ResourceRecordSet{
-						Name: aws.String(fmt.Sprintf("host-%d", i)),
-						Type: aws.String("TXT"),
-					},
-				},
+		})
+		cs = append(cs, &route53.Change{
+			Action: aws.String(route53.ChangeActionCreate),
+			ResourceRecordSet: &route53.ResourceRecordSet{
+				Name: aws.String(fmt.Sprintf("host-%d", i)),
+				Type: aws.String("TXT"),
 			},
-		)
+		})
 	}
 
 	batchCs := batchChangeSet(cs, testLimit)
@@ -1028,7 +933,7 @@ func validateAWSZone(t *testing.T, zone *route53.HostedZone, expected *route53.H
 	assert.Equal(t, aws.StringValue(expected.Name), aws.StringValue(zone.Name))
 }
 
-func validateAWSChangeRecords(t *testing.T, records Route53Changes, expected Route53Changes) {
+func validateAWSChangeRecords(t *testing.T, records []*route53.Change, expected []*route53.Change) {
 	require.Len(t, records, len(expected))
 
 	for i := range records {
@@ -1036,7 +941,7 @@ func validateAWSChangeRecords(t *testing.T, records Route53Changes, expected Rou
 	}
 }
 
-func validateAWSChangeRecord(t *testing.T, record *Route53Change, expected *Route53Change) {
+func validateAWSChangeRecord(t *testing.T, record *route53.Change, expected *route53.Change) {
 	assert.Equal(t, aws.StringValue(expected.Action), aws.StringValue(record.Action))
 	assert.Equal(t, aws.StringValue(expected.ResourceRecordSet.Name), aws.StringValue(record.ResourceRecordSet.Name))
 	assert.Equal(t, aws.StringValue(expected.ResourceRecordSet.Type), aws.StringValue(record.ResourceRecordSet.Type))
@@ -1218,7 +1123,6 @@ func TestAWSCanonicalHostedZone(t *testing.T) {
 		{"foo.elb.ca-central-1.amazonaws.com", "Z2EPGBW3API2WT"},
 		{"foo.elb.ap-east-1.amazonaws.com", "Z12Y7K3UBGUAD1"},
 		{"foo.elb.ap-south-1.amazonaws.com", "ZVDDRBQ08TROA"},
-		{"foo.elb.ap-northeast-3.amazonaws.com", "Z1GWIQ4HH19I5X"},
 		{"foo.elb.ap-northeast-2.amazonaws.com", "ZIBE1TIR4HY56"},
 		{"foo.elb.ap-southeast-1.amazonaws.com", "ZKVM4W9LS7TM"},
 		{"foo.elb.ap-southeast-2.amazonaws.com", "ZCT6FZBF4DROD"},
@@ -1435,7 +1339,6 @@ func newAWSProviderWithTagFilter(t *testing.T, domainFilter endpoint.DomainFilte
 		zoneTagFilter:        zoneTagFilter,
 		dryRun:               false,
 		zonesCache:           &zonesListCache{duration: 1 * time.Minute},
-		failedChangesQueue:   make(map[string]Route53Changes),
 	}
 
 	createAWSZone(t, provider, &route53.HostedZone{
@@ -1508,15 +1411,6 @@ func addZoneTags(tagMap map[string][]*route53.Tag, zoneID string, tags map[strin
 
 func validateRecords(t *testing.T, records []*route53.ResourceRecordSet, expected []*route53.ResourceRecordSet) {
 	assert.ElementsMatch(t, expected, records)
-}
-
-func containsRecordWithDNSName(records []*endpoint.Endpoint, dnsName string) bool {
-	for _, record := range records {
-		if record.DNSName == dnsName {
-			return true
-		}
-	}
-	return false
 }
 
 func TestRequiresDeleteCreate(t *testing.T) {

@@ -58,8 +58,7 @@ type StartupConfig struct {
 	DryRun        bool
 	View          string
 	MaxResults    int
-	FQDNRegEx     string
-	NameRegEx     string
+	FQDNRexEx     string
 	CreatePTR     bool
 	CacheDuration int
 }
@@ -86,17 +85,15 @@ type infobloxRecordSet struct {
 // additional query parameter on all get requests
 type ExtendedRequestBuilder struct {
 	fqdnRegEx  string
-	nameRegEx  string
 	maxResults int
 	ibclient.WapiRequestBuilder
 }
 
 // NewExtendedRequestBuilder returns a ExtendedRequestBuilder which adds
 // _max_results query parameter to all GET requests
-func NewExtendedRequestBuilder(maxResults int, fqdnRegEx string, nameRegEx string) *ExtendedRequestBuilder {
+func NewExtendedRequestBuilder(maxResults int, fqdnRegEx string) *ExtendedRequestBuilder {
 	return &ExtendedRequestBuilder{
 		fqdnRegEx:  fqdnRegEx,
-		nameRegEx:  nameRegEx,
 		maxResults: maxResults,
 	}
 }
@@ -110,16 +107,10 @@ func (mrb *ExtendedRequestBuilder) BuildRequest(t ibclient.RequestType, obj ibcl
 		if mrb.maxResults > 0 {
 			query.Set("_max_results", strconv.Itoa(mrb.maxResults))
 		}
-		_, zoneAuthQuery := obj.(*ibclient.ZoneAuth)
-		if zoneAuthQuery && t == ibclient.GET && mrb.fqdnRegEx != "" {
+		_, ok := obj.(*ibclient.ZoneAuth)
+		if ok && t == ibclient.GET && mrb.fqdnRegEx != "" {
 			query.Set("fqdn~", mrb.fqdnRegEx)
 		}
-
-		// if we are not doing a ZoneAuth query, support the name filter
-		if !zoneAuthQuery && mrb.nameRegEx != "" {
-			query.Set("name~", mrb.nameRegEx)
-		}
-
 		req.URL.RawQuery = query.Encode()
 	}
 	return
@@ -151,9 +142,9 @@ func NewInfobloxProvider(ibStartupCfg StartupConfig) (*ProviderConfig, error) {
 		requestBuilder ibclient.HttpRequestBuilder
 		err            error
 	)
-	if ibStartupCfg.MaxResults != 0 || ibStartupCfg.FQDNRegEx != "" || ibStartupCfg.NameRegEx != "" {
+	if ibStartupCfg.MaxResults != 0 || ibStartupCfg.FQDNRexEx != "" {
 		// use our own HttpRequestBuilder which sets _max_results parameter on GET requests
-		requestBuilder = NewExtendedRequestBuilder(ibStartupCfg.MaxResults, ibStartupCfg.FQDNRegEx, ibStartupCfg.NameRegEx)
+		requestBuilder = NewExtendedRequestBuilder(ibStartupCfg.MaxResults, ibStartupCfg.FQDNRexEx)
 	} else {
 		// use the default HttpRequestBuilder of the infoblox client
 		requestBuilder, err = ibclient.NewWapiRequestBuilder(hostCfg, authCfg)
@@ -175,7 +166,7 @@ func NewInfobloxProvider(ibStartupCfg StartupConfig) (*ProviderConfig, error) {
 		zoneIDFilter:  ibStartupCfg.ZoneIDFilter,
 		dryRun:        ibStartupCfg.DryRun,
 		view:          ibStartupCfg.View,
-		fqdnRegEx:     ibStartupCfg.FQDNRegEx,
+		fqdnRegEx:     ibStartupCfg.FQDNRexEx,
 		createPTR:     ibStartupCfg.CreatePTR,
 		cacheDuration: ibStartupCfg.CacheDuration,
 	}

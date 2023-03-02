@@ -123,7 +123,6 @@ type Config struct {
 	InfobloxView                      string
 	InfobloxMaxResults                int
 	InfobloxFQDNRegEx                 string
-	InfobloxNameRegEx                 string
 	InfobloxCreatePTR                 bool
 	InfobloxCacheDuration             int
 	DynCustomerName                   string
@@ -199,6 +198,7 @@ type Config struct {
 	PiholeTLSInsecureSkipVerify       bool
 	PluralCluster                     string
 	PluralProvider                    string
+	TidyDNSEndpoint                   string
 }
 
 var defaultConfig = &Config{
@@ -341,6 +341,7 @@ var defaultConfig = &Config{
 	PiholeTLSInsecureSkipVerify: false,
 	PluralCluster:               "",
 	PluralProvider:              "",
+	TidyDNSEndpoint:             "",
 }
 
 // NewConfig returns new Config object
@@ -430,7 +431,7 @@ func (cfg *Config) ParseFlags(args []string) error {
 	app.Flag("exclude-target-net", "Exclude target nets (optional)").StringsVar(&cfg.ExcludeTargetNets)
 
 	// Flags related to providers
-	providers := []string{"akamai", "alibabacloud", "aws", "aws-sd", "azure", "azure-dns", "azure-private-dns", "bluecat", "civo", "cloudflare", "coredns", "designate", "digitalocean", "dnsimple", "dyn", "exoscale", "gandi", "godaddy", "google", "ibmcloud", "infoblox", "inmemory", "linode", "ns1", "oci", "ovh", "pdns", "pihole", "plural", "rcodezero", "rdns", "rfc2136", "safedns", "scaleway", "skydns", "tencentcloud", "transip", "ultradns", "vinyldns", "vultr"}
+	providers := []string{"akamai", "alibabacloud", "aws", "aws-sd", "azure", "azure-dns", "azure-private-dns", "bluecat", "civo", "cloudflare", "coredns", "designate", "digitalocean", "dnsimple", "dyn", "exoscale", "gandi", "godaddy", "google", "ibmcloud", "infoblox", "inmemory", "linode", "ns1", "oci", "ovh", "pdns", "pihole", "plural", "rcodezero", "rdns", "rfc2136", "safedns", "scaleway", "skydns", "tencentcloud", "transip", "ultradns", "vinyldns", "vultr", "tidydns"}
 	app.Flag("provider", "The DNS provider where the DNS records will be created (required, options: "+strings.Join(providers, ", ")+")").Required().PlaceHolder("provider").EnumVar(&cfg.Provider, providers...)
 	app.Flag("domain-filter", "Limit possible target zones by a domain suffix; specify multiple times for multiple domains (optional)").Default("").StringsVar(&cfg.DomainFilter)
 	app.Flag("exclude-domains", "Exclude subdomains (optional)").Default("").StringsVar(&cfg.ExcludeDomains)
@@ -490,7 +491,6 @@ func (cfg *Config) ParseFlags(args []string) error {
 	app.Flag("infoblox-view", "DNS view (default: \"\")").Default(defaultConfig.InfobloxView).StringVar(&cfg.InfobloxView)
 	app.Flag("infoblox-max-results", "Add _max_results as query parameter to the URL on all API requests. The default is 0 which means _max_results is not set and the default of the server is used.").Default(strconv.Itoa(defaultConfig.InfobloxMaxResults)).IntVar(&cfg.InfobloxMaxResults)
 	app.Flag("infoblox-fqdn-regex", "Apply this regular expression as a filter for obtaining zone_auth objects. This is disabled by default.").Default(defaultConfig.InfobloxFQDNRegEx).StringVar(&cfg.InfobloxFQDNRegEx)
-	app.Flag("infoblox-name-regex", "Apply this regular expression as a filter on the name field for obtaining infoblox records. This is disabled by default.").Default(defaultConfig.InfobloxNameRegEx).StringVar(&cfg.InfobloxNameRegEx)
 	app.Flag("infoblox-create-ptr", "When using the Infoblox provider, create a ptr entry in addition to an entry").Default(strconv.FormatBool(defaultConfig.InfobloxCreatePTR)).BoolVar(&cfg.InfobloxCreatePTR)
 	app.Flag("infoblox-cache-duration", "When using the Infoblox provider, set the record TTL (0s to disable).").Default(strconv.Itoa(defaultConfig.InfobloxCacheDuration)).IntVar(&cfg.InfobloxCacheDuration)
 	app.Flag("dyn-customer-name", "When using the Dyn provider, specify the Customer Name").Default("").StringVar(&cfg.DynCustomerName)
@@ -554,6 +554,9 @@ func (cfg *Config) ParseFlags(args []string) error {
 	// Flags related to the Plural provider
 	app.Flag("plural-cluster", "When using the plural provider, specify the cluster name you're running with").Default(defaultConfig.PluralCluster).StringVar(&cfg.PluralCluster)
 	app.Flag("plural-provider", "When using the plural provider, specify the provider name you're running with").Default(defaultConfig.PluralProvider).StringVar(&cfg.PluralProvider)
+
+	// Flags related to TidyDNS
+	app.Flag("tidydns-endpoint", "Provide the endpoint for the TidyDNS service").Default(defaultConfig.TidyDNSEndpoint).StringVar(&cfg.TidyDNSEndpoint)
 
 	// Flags related to policies
 	app.Flag("policy", "Modify how DNS records are synchronized between sources and providers (default: sync, options: sync, upsert-only, create-only)").Default(defaultConfig.Policy).EnumVar(&cfg.Policy, "sync", "upsert-only", "create-only")
