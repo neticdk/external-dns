@@ -69,6 +69,7 @@ import (
 	"sigs.k8s.io/external-dns/provider/safedns"
 	"sigs.k8s.io/external-dns/provider/scaleway"
 	"sigs.k8s.io/external-dns/provider/tencentcloud"
+	"sigs.k8s.io/external-dns/provider/tidydns"
 	"sigs.k8s.io/external-dns/provider/transip"
 	"sigs.k8s.io/external-dns/provider/ultradns"
 	"sigs.k8s.io/external-dns/provider/vinyldns"
@@ -182,6 +183,8 @@ func main() {
 
 	var p provider.Provider
 	switch cfg.Provider {
+	case "tidydns":
+		p, err = tidydns.NewTidyDNSProvider(domainFilter, zoneIDFilter, cfg.TidyDNSEndpoint, cfg.DryRun)
 	case "akamai":
 		p, err = akamai.NewAkamaiProvider(
 			akamai.AkamaiConfig{
