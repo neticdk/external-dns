@@ -32,7 +32,7 @@ import (
 
 var (
 	minimalConfig = &Config{
-		APIServerURL:                "",
+		APIServerURL: "", TidyDNSEndpoint: "",
 		KubeConfig:                  "",
 		RequestTimeout:              time.Second * 30,
 		ContourLoadBalancerService:  "heptio-contour/contour",
@@ -132,7 +132,7 @@ var (
 	}
 
 	overriddenConfig = &Config{
-		APIServerURL:                "http://127.0.0.1:8080",
+		APIServerURL: "http://127.0.0.1:8080", TidyDNSEndpoint: "https://tidy.example.com/index.cgi",
 		KubeConfig:                  "/some/path",
 		RequestTimeout:              time.Second * 77,
 		ContourLoadBalancerService:  "heptio-contour-other/contour-other",
@@ -262,7 +262,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			title: "override everything via flags",
 			args: []string{
-				"--server=http://127.0.0.1:8080",
+				"--server=http://127.0.0.1:8080", "--tidydns-endpoint=https://tidy.example.com/index.cgi",
 				"--kubeconfig=/some/path",
 				"--request-timeout=77s",
 				"--contour-load-balancer=heptio-contour-other/contour-other",
@@ -388,7 +388,7 @@ func TestParseFlags(t *testing.T) {
 			title: "override everything via environment variables",
 			args:  []string{},
 			envVars: map[string]string{
-				"EXTERNAL_DNS_SERVER":                          "http://127.0.0.1:8080",
+				"EXTERNAL_DNS_SERVER": "http://127.0.0.1:8080", "EXTERNAL_DNS_TIDYDNS_ENDPOINT": "https://tidy.example.com/index.cgi",
 				"EXTERNAL_DNS_KUBECONFIG":                      "/some/path",
 				"EXTERNAL_DNS_REQUEST_TIMEOUT":                 "77s",
 				"EXTERNAL_DNS_CONTOUR_LOAD_BALANCER":           "heptio-contour-other/contour-other",
