@@ -248,6 +248,26 @@ var domainFilterTests = []domainFilterTest{
 		},
 	},
 	{
+		[]string{"æøå.org"},
+		[]string{"api.æøå.org"},
+		[]string{"foo.api.æøå.org", "api.æøå.org"},
+		false,
+		map[string][]string{
+			"include": {"æøå.org"},
+			"exclude": {"api.æøå.org"},
+		},
+	},
+	{
+		[]string{"   æøå.org. "},
+		[]string{"   .api.æøå.org    "},
+		[]string{"foo.api.æøå.org", "bar.baz.api.æøå.org."},
+		false,
+		map[string][]string{
+			"include": {"æøå.org"},
+			"exclude": {".api.æøå.org"},
+		},
+	},
+	{
 		[]string{"example.org."},
 		[]string{"api.example.org"},
 		[]string{"dev-api.example.org", "qa-api.example.org"},
@@ -298,6 +318,16 @@ var domainFilterTests = []domainFilterTest{
 		},
 	},
 	{
+		[]string{"sTOnks📈.ORG", "API.xn--StonkS-u354e.ORG"},
+		[]string{"Foo-Bar.stoNks📈.Org"},
+		[]string{"FoOoo.Api.Stonks📈.Org"},
+		true,
+		map[string][]string{
+			"include": {"api.stonks📈.org", "stonks📈.org"},
+			"exclude": {"foo-bar.stonks📈.org"},
+		},
+	},
+	{
 		[]string{"eXaMPle.ORG", "API.example.ORG"},
 		[]string{"api.example.org"},
 		[]string{"foobar.Example.Org"},
@@ -345,6 +375,25 @@ var regexDomainFilterTests = []regexDomainFilterTest{
 		true,
 		map[string]string{
 			"regexInclude": "(?:foo|bar)\\.org$",
+		},
+	},
+	{
+		regexp.MustCompile("(?:😍|🤩)\\.org$"),
+		regexp.MustCompile(""),
+		[]string{"😍.org", "xn--r28h.org", "🤩.org", "example.😍.org", "example.🤩.org", "a.example.xn--r28h.org", "a.example.🤩.org"},
+		true,
+		map[string]string{
+			"regexInclude": "(?:😍|🤩)\\.org$",
+		},
+	},
+	{
+		regexp.MustCompile("(?:😍|🤩)\\.org$"),
+		regexp.MustCompile("^example\\.(?:😍|🤩)\\.org$"),
+		[]string{"example.😍.org", "example.🤩.org"},
+		false,
+		map[string]string{
+			"regexInclude": "(?:😍|🤩)\\.org$",
+			"regexExclude": "^example\\.(?:😍|🤩)\\.org$",
 		},
 	},
 	{
@@ -479,8 +528,8 @@ func TestPrepareFiltersStripsWhitespaceAndDotSuffix(t *testing.T) {
 			nil,
 		},
 		{
-			[]string{"  foo   ", "  bar. ", "baz."},
-			[]string{"foo", "bar", "baz"},
+			[]string{"  foo   ", "  bar. ", "baz.", "xn--bar-zna"},
+			[]string{"foo", "bar", "baz", "øbar"},
 		},
 		{
 			[]string{"foo.bar", "  foo.bar.  ", " foo.bar.baz ", " foo.bar.baz.  "},
@@ -712,6 +761,24 @@ func TestDomainFilterMatchParent(t *testing.T) {
 			true,
 			map[string][]string{
 				"include": {"a.example.com", "b.example.com"},
+			},
+		},
+		{
+			[]string{"a.xn--c1yn36f.æøå.", "b.點看.xn--5cab8c", "c.點看.æøå"},
+			[]string{},
+			[]string{"xn--c1yn36f.xn--5cab8c"},
+			true,
+			map[string][]string{
+				"include": {"a.點看.æøå", "b.點看.æøå", "c.點看.æøå"},
+			},
+		},
+		{
+			[]string{"punycode.xn--c1yn36f.local", "å.點看.local.", "ø.點看.local"},
+			[]string{},
+			[]string{"點看.local"},
+			true,
+			map[string][]string{
+				"include": {"punycode.點看.local", "å.點看.local", "ø.點看.local"},
 			},
 		},
 		{

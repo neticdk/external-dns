@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"golang.org/x/net/idna"
 )
 
 type MatchAllDomainFilters []DomainFilterInterface
@@ -69,7 +71,7 @@ type domainFilterSerde struct {
 func prepareFilters(filters []string) []string {
 	var fs []string
 	for _, filter := range filters {
-		if domain := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(filter), ".")); domain != "" {
+		if domain := StrippedDomain(strings.TrimSpace(filter)); domain != "" {
 			fs = append(fs, domain)
 		}
 	}
@@ -109,7 +111,7 @@ func matchFilter(filters []string, domain string, emptyval bool) bool {
 		return emptyval
 	}
 
-	strippedDomain := strings.ToLower(strings.TrimSuffix(domain, "."))
+	strippedDomain := StrippedDomain(domain)
 	for _, filter := range filters {
 		if filter == "" {
 			continue
@@ -133,7 +135,7 @@ func matchFilter(filters []string, domain string, emptyval bool) bool {
 // only regex regular expression matches the domain
 // Otherwise, if either negativeRegex matches or regex does not match the domain, it returns false
 func matchRegex(regex *regexp.Regexp, negativeRegex *regexp.Regexp, domain string) bool {
-	strippedDomain := strings.ToLower(strings.TrimSuffix(domain, "."))
+	strippedDomain := StrippedDomain(domain)
 
 	if negativeRegex != nil && negativeRegex.String() != "" {
 		return !negativeRegex.MatchString(strippedDomain)
@@ -214,7 +216,7 @@ func (df DomainFilter) MatchParent(domain string) bool {
 		return true
 	}
 
-	strippedDomain := strings.ToLower(strings.TrimSuffix(domain, "."))
+	strippedDomain := StrippedDomain(domain)
 	for _, filter := range df.Filters {
 		if filter == "" || strings.HasPrefix(filter, ".") {
 			// We don't check parents if the filter is prefixed with "."
@@ -225,4 +227,11 @@ func (df DomainFilter) MatchParent(domain string) bool {
 		}
 	}
 	return false
+}
+
+// StrippedDomain converts a domains to a canonical form, so that we can filter on it
+// it: trim "." suffix, converts to lower case, encode to Unicode from Punycode
+func StrippedDomain(domain string) string {
+	s, _ := idna.ToUnicode(strings.ToLower(strings.TrimSuffix(domain, ".")))
+	return s
 }
