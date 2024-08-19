@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/idna"
 
 	"sigs.k8s.io/external-dns/endpoint"
 )
@@ -333,9 +334,12 @@ func filterRecordsForPlan(records []*endpoint.Endpoint, domainFilter endpoint.Ma
 }
 
 // normalizeDNSName converts a DNS name to a canonical form, so that we can use string equality
-// it: removes space, converts to lower case, ensures there is a trailing dot
+// it: converts to lower case, removes space, encode to ASCII using Punycode, ensures there is a trailing dot
 func normalizeDNSName(dnsName string) string {
-	s := strings.TrimSpace(strings.ToLower(dnsName))
+	s, err := idna.ToASCII(strings.TrimSpace(strings.ToLower(dnsName)))
+	if err != nil {
+		log.Warnf(`Got error while parsing %s: %v`, dnsName, err)
+	}
 	if !strings.HasSuffix(s, ".") {
 		s += "."
 	}
