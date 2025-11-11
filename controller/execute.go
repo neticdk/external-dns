@@ -64,6 +64,7 @@ import (
 	"sigs.k8s.io/external-dns/provider/plural"
 	"sigs.k8s.io/external-dns/provider/rfc2136"
 	"sigs.k8s.io/external-dns/provider/scaleway"
+	"sigs.k8s.io/external-dns/provider/tidydns"
 	"sigs.k8s.io/external-dns/provider/transip"
 	"sigs.k8s.io/external-dns/provider/webhook"
 	webhookapi "sigs.k8s.io/external-dns/provider/webhook/api"
@@ -337,6 +338,8 @@ func buildProvider(
 		)
 	case "plural":
 		p, err = plural.NewPluralProvider(cfg.PluralCluster, cfg.PluralProvider)
+	case "tidydns":
+		p, err = tidydns.NewTidyDNSProvider(domainFilter, zoneIDFilter, cfg.TidyDNSEndpoint, cfg.DryRun)
 	case "webhook":
 		p, err = webhook.NewWebhookProvider(cfg.WebhookProviderURL)
 	default:

@@ -149,6 +149,7 @@
 | `--[no-]rfc2136-use-tls` | When using the RFC2136 provider, communicate with name server over tls |
 | `--[no-]rfc2136-skip-tls-verify` | When using TLS with the RFC2136 provider, disable verification of any TLS certificates |
 | `--rfc2136-load-balancing-strategy=disabled` | When using the RFC2136 provider, specify the load balancing strategy (default: disabled, options: random, round-robin, disabled) |
+| `--tidydns-endpoint=""` | When using TidyDNS provider, specify the endpoint TidyDNS service |
 | `--transip-account=""` | When using the TransIP provider, specify the account name (required when --provider=transip) |
 | `--transip-keyfile=""` | When using the TransIP provider, specify the path to the private key file (required when --provider=transip) |
 | `--pihole-server=""` | When using the Pihole provider, the base URL of the Pihole web server (required when --provider=pihole) |
@@ -181,5 +182,5 @@
 | `--webhook-provider-read-timeout=5s` | The read timeout for the webhook provider in duration format (default: 5s) |
 | `--webhook-provider-write-timeout=10s` | The write timeout for the webhook provider in duration format (default: 10s) |
 | `--[no-]webhook-server` | When enabled, runs as a webhook server instead of a controller. (default: false). |
-| `--provider=provider` | The DNS provider where the DNS records will be created (required, options: akamai, alibabacloud, aws, aws-sd, azure, azure-dns, azure-private-dns, civo, cloudflare, coredns, digitalocean, dnsimple, exoscale, gandi, godaddy, google, inmemory, linode, ns1, oci, ovh, pdns, pihole, plural, rfc2136, scaleway, skydns, transip, webhook) |
+| `--provider=provider` | The DNS provider where the DNS records will be created (required, options: akamai, alibabacloud, aws, aws-sd, azure, azure-dns, azure-private-dns, civo, cloudflare, coredns, digitalocean, dnsimple, exoscale, gandi, godaddy, google, inmemory, linode, ns1, oci, ovh, pdns, pihole, plural, rfc2136, scaleway, skydns, tidydns, transip, webhook) |
 | `--source=source` | The resource types that are queried for endpoints; specify multiple times for multiple sources (required, options: service, ingress, node, pod, fake, connector, gateway-httproute, gateway-grpcroute, gateway-tlsroute, gateway-tcproute, gateway-udproute, istio-gateway, istio-virtualservice, cloudfoundry, contour-httpproxy, gloo-proxy, crd, empty, skipper-routegroup, openshift-route, ambassador-host, kong-tcpingress, f5-virtualserver, f5-transportserver, traefik-proxy) |
