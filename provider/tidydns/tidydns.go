@@ -47,7 +47,7 @@ type groupKey struct {
 	rType string
 }
 
-// NewTidyDNSProvider initializes a new Dnsimple based provider
+// NewTidyDNSProvider initializes a new TidyDNS based provider
 func NewTidyDNSProvider(domainFilter *endpoint.DomainFilter, zoneIDFilter provider.ZoneIDFilter, endpoint string, dryRun bool) (provider.Provider, error) {
 	username := os.Getenv("TIDYDNS_USER")
 	if len(username) == 0 {
