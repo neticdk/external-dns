@@ -28,12 +28,12 @@ jobs:
           git remote add upstream https://github.com/kubernetes-sigs/external-dns.git
           git fetch upstream --tags
 
-          # Get the latest semver tag starting with 'v'
           LATEST_TAG=$(git tag -l 'v*' --sort=v:refname | tail -n 1)
           echo "Latest upstream tag is ${LATEST_TAG}"
 
-          # Merge the latest tag into the main branch
-          git merge --ff-only "${LATEST_TAG}"
+          # Merge the latest tag, but keep our version of the .github directory
+          git merge -X theirs -s recursive -m "chore: sync with upstream kubernetes-sigs/external-dns ${LATEST_TAG}" "${LATEST_TAG}"
+          git checkout HEAD -- .github
 
           echo "latest_tag=${LATEST_TAG}" >> "${GITHUB_OUTPUT}
 
