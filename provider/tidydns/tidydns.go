@@ -48,18 +48,18 @@ type groupKey struct {
 }
 
 // NewTidyDNSProvider initializes a new TidyDNS based provider
-func NewTidyDNSProvider(domainFilter *endpoint.DomainFilter, zoneIDFilter provider.ZoneIDFilter, endpoint string, dryRun bool) (provider.Provider, error) {
+func NewTidyDNSProvider(domainFilter *endpoint.DomainFilter, zoneIDFilter provider.ZoneIDFilter, tidyEndpoint string, dryRun bool) (provider.Provider, error) {
 	username := os.Getenv("TIDYDNS_USER")
 	if len(username) == 0 {
-		return nil, fmt.Errorf("no tidydns username provided")
+		return nil, fmt.Errorf("TIDYDNS_USER environment variable not set")
 	}
 
 	password := os.Getenv("TIDYDNS_PASS")
 	if len(password) == 0 {
-		return nil, fmt.Errorf("no tidydns password provided")
+		return nil, fmt.Errorf("TIDYDNS_PASS environment variable not set")
 	}
 
-	if len(endpoint) == 0 {
+	if len(tidyEndpoint) == 0 {
 		return nil, fmt.Errorf("no tidydns endpoint provided")
 	}
 
@@ -67,7 +67,7 @@ func NewTidyDNSProvider(domainFilter *endpoint.DomainFilter, zoneIDFilter provid
 		domainFilter: domainFilter,
 		zoneIDFilter: zoneIDFilter,
 		dryRun:       dryRun,
-		client:       tidydns.New(endpoint, username, password),
+		client:       tidydns.New(tidyEndpoint, username, password),
 	}
 	return provider, nil
 }
@@ -292,11 +292,11 @@ func findSuitableZones(zones []*tidydns.ZoneInfo, hostname string) *tidydns.Zone
 // convertRecordType translates the text record type into Tidy constants
 func convertRecordType(rType string) tidydns.RecordType {
 	switch rType {
-	case "A":
+	case endpoint.RecordTypeA:
 		return tidydns.RecordTypeA
-	case "CNAME":
+	case endpoint.RecordTypeCNAME:
 		return tidydns.RecordTypeCNAME
-	case "TXT":
+	case endpoint.RecordTypeTXT:
 		return tidydns.RecordTypeTXT
 	default:
 		return tidydns.RecordType(-1)
