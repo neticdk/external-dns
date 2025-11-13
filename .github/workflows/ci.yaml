@@ -2,9 +2,9 @@ name: Go
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 permissions:
   contents: read  #  to fetch code (actions/checkout)
@@ -36,7 +36,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        go get -v -t -d ./...
+        go mod download
+        go mod verify
 
     - name: Test
       env:

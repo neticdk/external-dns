@@ -209,6 +209,7 @@ type Config struct {
 	PiholeApiVersion                              string
 	PluralCluster                                 string
 	PluralProvider                                string
+	TidyDNSEndpoint                               string
 	WebhookProviderURL                            string
 	WebhookProviderReadTimeout                    time.Duration
 	WebhookProviderWriteTimeout                   time.Duration
@@ -366,6 +367,7 @@ var defaultConfig = &Config{
 	TLSCA:                        "",
 	TLSClientCert:                "",
 	TLSClientCertKey:             "",
+	TidyDNSEndpoint:              "",
 	TraefikEnableLegacy:          false,
 	TraefikDisableNew:            false,
 	TransIPAccountName:           "",
@@ -762,6 +764,9 @@ func bindFlags(b FlagBinder, cfg *Config) {
 	b.BoolVar("rfc2136-skip-tls-verify", "When using TLS with the RFC2136 provider, disable verification of any TLS certificates", defaultConfig.RFC2136SkipTLSVerify, &cfg.RFC2136SkipTLSVerify)
 	b.EnumVar("rfc2136-load-balancing-strategy", "When using the RFC2136 provider, specify the load balancing strategy (default: disabled, options: random, round-robin, disabled)", defaultConfig.RFC2136LoadBalancingStrategy, &cfg.RFC2136LoadBalancingStrategy, "random", "round-robin", "disabled")
 
+	// Flags related to TidyDNS provider
+	b.StringVar("tidydns-endpoint", "When using TidyDNS provider, specify the endpoint TidyDNS service", defaultConfig.TidyDNSEndpoint, &cfg.TidyDNSEndpoint)
+
 	// Flags related to TransIP provider
 	b.StringVar("transip-account", "When using the TransIP provider, specify the account name (required when --provider=transip)", defaultConfig.TransIPAccountName, &cfg.TransIPAccountName)
 	b.StringVar("transip-keyfile", "When using the TransIP provider, specify the path to the private key file (required when --provider=transip)", defaultConfig.TransIPPrivateKeyFile, &cfg.TransIPPrivateKeyFile)
@@ -820,7 +825,7 @@ func App(cfg *Config) *kingpin.Application {
 
 	// Kingpin-only semantics: preserve Required/PlaceHolder and enum validation
 	// that Kingpin provided before the flags were migrated into the binder.
-	app.Flag("provider", "The DNS provider where the DNS records will be created (required, options: akamai, alibabacloud, aws, aws-sd, azure, azure-dns, azure-private-dns, civo, cloudflare, coredns, digitalocean, dnsimple, exoscale, gandi, godaddy, google, inmemory, linode, ns1, oci, ovh, pdns, pihole, plural, rfc2136, scaleway, skydns, transip, webhook)").Required().PlaceHolder("provider").EnumVar(&cfg.Provider, providerNames...)
+	app.Flag("provider", "The DNS provider where the DNS records will be created (required, options: akamai, alibabacloud, aws, aws-sd, azure, azure-dns, azure-private-dns, civo, cloudflare, coredns, digitalocean, dnsimple, exoscale, gandi, godaddy, google, inmemory, linode, ns1, oci, ovh, pdns, pihole, plural, rfc2136, scaleway, skydns, tidydns, transip, webhook)").Required().PlaceHolder("provider").EnumVar(&cfg.Provider, providerNames...)
 
 	// Reintroduce source enum/required validation in Kingpin to match previous behavior.
 	app.Flag("source", "The resource types that are queried for endpoints; specify multiple times for multiple sources (required, options: service, ingress, node, pod, fake, connector, gateway-httproute, gateway-grpcroute, gateway-tlsroute, gateway-tcproute, gateway-udproute, istio-gateway, istio-virtualservice, cloudfoundry, contour-httpproxy, gloo-proxy, crd, empty, skipper-routegroup, openshift-route, ambassador-host, kong-tcpingress, f5-virtualserver, f5-transportserver, traefik-proxy)").Required().PlaceHolder("source").EnumsVar(&cfg.Sources, "service", "ingress", "node", "pod", "gateway-httproute", "gateway-grpcroute", "gateway-tlsroute", "gateway-tcproute", "gateway-udproute", "istio-gateway", "istio-virtualservice", "cloudfoundry", "contour-httpproxy", "gloo-proxy", "fake", "connector", "crd", "empty", "skipper-routegroup", "openshift-route", "ambassador-host", "kong-tcpingress", "f5-virtualserver", "f5-transportserver", "traefik-proxy")

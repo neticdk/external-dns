@@ -1,0 +1,53 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    # Runs at 05:00 UTC every day
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync Fork
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        #with:
+          # Using a PAT is required to trigger other workflows on PR creation
+        #  token: ${{ secrets.PAT }}
+
+      - name: Set up Git
+        id: merge
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git remote add upstream https://github.com/kubernetes-sigs/external-dns.git
+          git fetch upstream --tags
+
+          LATEST_TAG=$(git tag -l 'v*' --sort=v:refname | tail -n 1)
+          echo "Latest upstream tag is ${LATEST_TAG}"
+
+          # Merge the latest tag, but keep our version of the .github directory
+          git merge -X theirs -s recursive -m "chore: sync with upstream kubernetes-sigs/external-dns ${LATEST_TAG}" "${LATEST_TAG}"
+          git checkout HEAD -- .github
+
+          echo "latest_tag=${LATEST_TAG}" >> "${GITHUB_OUTPUT}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          token: ${{ secrets.PAT }}
+          commit-message: "chore: sync with upstream kubernetes-sigs/external-dns ${{ steps.merge.outputs.latest_tag }}"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          branch: "chore/sync-upstream-${{ steps.merge.outputs.latest_tag }}"
+          delete-branch: true
+          title: "chore: sync with upstream `kubernetes-sigs/external-dns` ${{ steps.merge.outputs.latest_tag }}"
+          body: |
+            This PR is auto-generated and syncs changes from the upstream `kubernetes-sigs/external-dns` repository.
+          labels: "automated-pr, chore"
+          base: "main"
