@@ -31,7 +31,7 @@ jobs:
           echo "Latest upstream tag is ${LATEST_TAG}"
 
           # Merge the latest tag, but keep our version of the .github directory
-          git merge --no-commit upstream ${LATEST_TAG}
+          git merge --no-commit upstream "${LATEST_TAG}" || true
           git reset HEAD .github
           rm -rf .github
           git checkout HEAD -- .github
