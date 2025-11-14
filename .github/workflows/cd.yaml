@@ -36,4 +36,4 @@ jobs:
         run: make build.push-amd64
         env:
           IMG_SBOM: "true"
-          REGISTRY: ghcr.io/containdk
+          REGISTRY: ghcr.io/neticdk
