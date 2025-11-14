@@ -32,8 +32,11 @@ jobs:
           echo "Latest upstream tag is ${LATEST_TAG}"
 
           # Merge the latest tag, but keep our version of the .github directory
-          git merge -X theirs -s recursive -m "chore: sync with upstream kubernetes-sigs/external-dns ${LATEST_TAG}" "${LATEST_TAG}"
+          git merge --no-commit upstream ${LATEST_TAG}
+          git reset HEAD .github
+          rm -rf .github
           git checkout HEAD -- .github
+          git commit -m "chore: sync with upstream kubernetes-sigs/external-dns ${LATEST_TAG}"
 
           echo "latest_tag=${LATEST_TAG}" >> "${GITHUB_OUTPUT}
 
