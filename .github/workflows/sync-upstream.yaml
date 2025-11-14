@@ -37,7 +37,7 @@ jobs:
           git checkout HEAD -- .github
           git commit -m "chore: sync with upstream kubernetes-sigs/external-dns ${LATEST_TAG}"
 
-          echo "latest_tag=${LATEST_TAG}" >> "${GITHUB_OUTPUT}
+          echo "latest_tag=${LATEST_TAG}" >> "${GITHUB_OUTPUT}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
