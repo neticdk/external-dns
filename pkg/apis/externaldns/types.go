@@ -417,6 +417,7 @@ var providerNames = []string{
 	"rfc2136",
 	"scaleway",
 	"skydns",
+	"tidydns",
 	"transip",
 	"webhook",
 }
