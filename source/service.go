@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
+	"sigs.k8s.io/external-dns/provider"
 	"sigs.k8s.io/external-dns/source/informers"
 
 	"sigs.k8s.io/external-dns/source/annotations"
@@ -81,6 +82,7 @@ type serviceSource struct {
 	nodeInformer                   coreinformers.NodeInformer
 	serviceTypeFilter              *serviceTypes
 	exposeInternalIPv6             bool
+	excludeUnschedulable           bool
 
 	// process Services with legacy annotations
 	compatibility string
@@ -97,7 +99,7 @@ func NewServiceSource(
 	ignoreHostnameAnnotation bool,
 	labelSelector labels.Selector,
 	resolveLoadBalancerHostname,
-	listenEndpointEvents, exposeInternalIPv6 bool,
+	listenEndpointEvents, exposeInternalIPv6, excludeUnschedulable bool,
 ) (Source, error) {
 	tmpl, err := fqdn.ParseTemplate(fqdnTemplate)
 	if err != nil {
@@ -223,6 +225,7 @@ func NewServiceSource(
 		resolveLoadBalancerHostname:    resolveLoadBalancerHostname,
 		listenEndpointEvents:           listenEndpointEvents,
 		exposeInternalIPv6:             exposeInternalIPv6,
+		excludeUnschedulable:           excludeUnschedulable,
 	}, nil
 }
 
@@ -811,6 +814,10 @@ func (sc *serviceSource) extractNodePortTargets(svc *v1.Service) (endpoint.Targe
 	}
 
 	for _, node := range nodes {
+		if node.Spec.Unschedulable && sc.excludeUnschedulable {
+			log.Debugf("Skipping node %s - unschedulable", node.Name)
+			continue
+		}
 		for _, address := range node.Status.Addresses {
 			switch address.Type {
 			case v1.NodeExternalIP:
@@ -855,7 +862,7 @@ func (sc *serviceSource) extractNodePortEndpoints(svc *v1.Service, hostname stri
 			// see https://en.wikipedia.org/wiki/SRV_record
 
 			// build a target with a priority of 0, weight of 50, and pointing the given port on the given host
-			target := fmt.Sprintf("0 50 %d %s", port.NodePort, hostname)
+			target := fmt.Sprintf("0 50 %d %s", port.NodePort, provider.EnsureTrailingDot(hostname))
 
 			// take the service name from the K8s Service object
 			// it is safe to use since it is DNS compatible

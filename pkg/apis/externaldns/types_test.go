@@ -225,6 +225,7 @@ var (
 		TXTCacheInterval:                              12 * time.Hour,
 		Interval:                                      10 * time.Minute,
 		MinEventSyncInterval:                          50 * time.Second,
+		MinTTL:                                        40 * time.Second,
 		Once:                                          true,
 		DryRun:                                        true,
 		UpdateEvents:                                  true,
@@ -372,6 +373,7 @@ func TestParseFlags(t *testing.T) {
 				"--dynamodb-table=custom-table",
 				"--interval=10m",
 				"--min-event-sync-interval=50s",
+				"--min-ttl=40s",
 				"--once",
 				"--dry-run",
 				"--events",
@@ -495,6 +497,7 @@ func TestParseFlags(t *testing.T) {
 				"EXTERNAL_DNS_TXT_NEW_FORMAT_ONLY":                               "1",
 				"EXTERNAL_DNS_INTERVAL":                                          "10m",
 				"EXTERNAL_DNS_MIN_EVENT_SYNC_INTERVAL":                           "50s",
+				"EXTERNAL_DNS_MIN_TTL":                                           "40s",
 				"EXTERNAL_DNS_ONCE":                                              "1",
 				"EXTERNAL_DNS_DRY_RUN":                                           "1",
 				"EXTERNAL_DNS_EVENTS":                                            "1",
@@ -746,7 +749,7 @@ func TestParseFlagsCliFlagSeparatedValue(t *testing.T) {
 	assert.ElementsMatch(t, []string{"service"}, cfg.Sources)
 }
 
-// Env vars are accpeted by Kingpin backend but ignored by Cobra
+// Env vars are accepted by Kingpin backend but ignored by Cobra
 func TestEnvVarsIgnoredByCobraBackend(t *testing.T) {
 	t.Setenv("EXTERNAL_DNS_CLI", "cobra")
 	t.Setenv("EXTERNAL_DNS_NAMESPACE", "ns-from-env")
