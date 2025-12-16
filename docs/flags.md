@@ -97,6 +97,7 @@
 | `--cloudflare-region-key=""` | When using the Cloudflare provider, specify the default region for Regional Services. Any value other than an empty string will enable the Regional Services feature (optional) |
 | `--cloudflare-record-comment=""` | When using the Cloudflare provider, specify the comment for the DNS records (default: '') |
 | `--coredns-prefix="/skydns/"` | When using the CoreDNS provider, specify the prefix name |
+| `--[no-]coredns-strictly-owned` | When using the CoreDNS provider, store and filter strictly by txt-owner-id using an extra field inside of the etcd service (default: false) |
 | `--akamai-serviceconsumerdomain=""` | When using the Akamai provider, specify the base URL (required when --provider=akamai and edgerc-path not specified) |
 | `--akamai-client-token=""` | When using the Akamai provider, specify the client token (required when --provider=akamai and edgerc-path not specified) |
 | `--akamai-client-secret=""` | When using the Akamai provider, specify the client secret (required when --provider=akamai and edgerc-path not specified) |
@@ -175,6 +176,7 @@
 | `--[no-]once` | When enabled, exits the synchronization loop after the first iteration (default: disabled) |
 | `--[no-]dry-run` | When enabled, prints DNS record changes rather than actually performing them (default: disabled) |
 | `--[no-]events` | When enabled, in addition to running every interval, the reconciliation loop will get triggered when supported sources change (default: disabled) |
+| `--min-ttl=0s` | Configure global TTL for records in duration format. This value is used when the TTL for a source is not set or set to 0. (optional; examples: 1m12s, 72s, 72) |
 | `--log-format=text` | The format in which log messages are printed (default: text, options: text, json) |
 | `--metrics-address=":7979"` | Specify where to serve the metrics and health check endpoint (default: :7979) |
 | `--log-level=info` | Set the level of logging. (default: info, options: panic, debug, info, warning, error, fatal) |

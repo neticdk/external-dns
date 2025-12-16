@@ -62,7 +62,6 @@ ExternalDNS allows you to keep selected zones (via `--domain-filter`) synchroniz
 - [Akamai Edge DNS](https://learn.akamai.com/en-us/products/cloud_security/edge_dns.html)
 - [GoDaddy](https://www.godaddy.com)
 - [Gandi](https://www.gandi.net)
-- [IBM Cloud DNS](https://www.ibm.com/cloud/dns)
 - [Plural](https://www.plural.sh/)
 - [Pi-hole](https://pi-hole.net/)
 - [Alibaba Cloud DNS](https://www.alibabacloud.com/help/en/dns)
@@ -110,11 +109,12 @@ from the usage of any externally developed webhook.
 | Netic                 | https://github.com/neticdk/external-dns-tidydns-webhook              |
 | OpenStack Designate   | https://github.com/inovex/external-dns-designate-webhook             |
 | OpenWRT               | https://github.com/renanqts/external-dns-openwrt-webhook             |
-| RouterOS              | https://github.com/benfiola/external-dns-routeros-provider           |
 | SAKURA Cloud          | https://github.com/sacloud/external-dns-sacloud-webhook              |
+| Simply                | https://github.com/uozalp/external-dns-simply-webhook                |
 | STACKIT               | https://github.com/stackitcloud/external-dns-stackit-webhook         |
 | Unbound               | https://github.com/guillomep/external-dns-unbound-webhook            |
 | Unifi                 | https://github.com/kashalls/external-dns-unifi-webhook               |
+| UniFi                 | https://github.com/lexfrei/external-dns-unifios-webhook              |
 | Volcengine Cloud      | https://github.com/volcengine/external-dns-volcengine-webhook        |
 | Vultr                 | https://github.com/vultr/external-dns-vultr-webhook                  |
 | Yandex Cloud          | https://github.com/ismailbaskin/external-dns-yandex-webhook/         |
