@@ -1,6 +1,6 @@
 module sigs.k8s.io/external-dns
 
-go 1.25.5
+go 1.26
 
 require (
 	cloud.google.com/go/compute/metadata v0.9.0
@@ -32,7 +32,7 @@ require (
 	github.com/denverdino/aliyungo v0.0.0-20230411124812-ab98a9173ace
 	github.com/digitalocean/godo v1.170.0
 	github.com/dnsimple/dnsimple-go v1.7.0
-	github.com/exoscale/egoscale v0.102.3
+	github.com/exoscale/egoscale v0.102.5
 	github.com/ffledgling/pdns-go v0.0.0-20180219074714-524e7daccd99
 	github.com/go-gandi/go-gandi v0.7.0
 	github.com/go-logr/logr v1.4.3

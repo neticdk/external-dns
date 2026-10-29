@@ -300,6 +300,8 @@ github.com/evanphx/json-patch/v5 v5.9.11 h1:/8HVnzMq13/3x9TPvjG08wUGqBTmZBsCWzjT
 github.com/evanphx/json-patch/v5 v5.9.11/go.mod h1:3j+LviiESTElxA4p3EMKAB9HXj3/XEtnUf6OZxqIQTM=
 github.com/exoscale/egoscale v0.102.3 h1:DYqN2ipoLKpiFoprRGQkp2av/Ze7sUYYlGhi1N62tfY=
 github.com/exoscale/egoscale v0.102.3/go.mod h1:RPf2Gah6up+6kAEayHTQwqapzXlm93f0VQas/UEGU5c=
+github.com/exoscale/egoscale v0.102.5 h1:YH5xMi9bjETkO0NQ4dwnQmWsWvfIgrPZQ87jraiw3L0=
+github.com/exoscale/egoscale v0.102.5/go.mod h1:dQew6hG9qVTtMm01z0+K1Y7vl9EKQkxOI2B/ps3qVSI=
 github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d/go.mod h1:ZZMPRZwes7CROmyNKgQzC3XPs6L/G2EJLHddWejkmf4=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
