@@ -43,7 +43,7 @@ require (
 	github.com/maxatome/go-testdeep v1.14.0
 	github.com/miekg/dns v1.1.69
 	github.com/neticdk/tidydns-go v1.2.1
-	github.com/openshift/api v0.0.0-20251015095338-264e80a2b6e7
+	github.com/openshift/api 4ee683d000e5
 	github.com/openshift/client-go v0.0.0-20251015124057-db0dee36e235
 	github.com/oracle/oci-go-sdk/v65 v65.105.1
 	github.com/ovh/go-ovh v1.9.0
